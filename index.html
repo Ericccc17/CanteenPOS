@@ -1,15 +1,16 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<!-- APP ICON & FAVICON -->
-<link rel="icon" type="image/png" href="https://i.imgur.com/g3tuyhy.png">
-<link rel="apple-touch-icon" href="https://i.imgur.com/g3tuyhy.png">
-
   <!-- PWA Meta Tags -->
   <link rel="manifest" href="manifest.json">
   <meta name="theme-color" content="#2563eb">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Canteen POS">
+
+  <!-- App Icon / Favicon (Imgur Direct Link) -->
+  <link rel="icon" type="image/png" href="https://i.imgur.com/g3tuyhy.png">
+  <link rel="apple-touch-icon" href="https://i.imgur.com/g3tuyhy.png">
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -25,11 +26,14 @@
 <body class="bg-gray-100 p-4 font-sans">
   <div class="max-w-6xl mx-auto space-y-6">
     
-    <!-- HEADER -->
+    <!-- HEADER WITH APP LOGO -->
     <header class="bg-blue-600 text-white p-4 rounded-lg shadow flex flex-col sm:flex-row justify-between items-center gap-4">
-      <div>
-        <h1 class="text-xl font-bold">🏫 Canteen POS (Realtime Multi-Device)</h1>
-        <p id="currentDateDisplay" class="text-xs text-blue-100"></p>
+      <div class="flex items-center gap-3">
+        <img src="https://i.imgur.com/g3tuyhy.png" alt="App Logo" class="w-12 h-12 rounded-lg bg-white p-1 object-cover shadow">
+        <div>
+          <h1 class="text-xl font-bold">🏫 Canteen POS</h1>
+          <p id="currentDateDisplay" class="text-xs text-blue-100"></p>
+        </div>
       </div>
       <div class="flex items-center gap-4">
         <div class="text-right">
@@ -629,14 +633,14 @@
 
       if (item) {
         isScanningAllowed = false;
-        playBeepSound(); // Play beep
+        playBeepSound();
 
         addItemToCart(item.id, qtyInput);
         document.getElementById('scanQty').value = 1;
 
         setTimeout(() => {
           isScanningAllowed = true;
-        }, 1500); // 1.5 seconds cooldown
+        }, 1500);
       } else {
         isScanningAllowed = false;
         alert("Scanned barcode not found in inventory!");
@@ -766,9 +770,11 @@
   <!-- PWA SERVICE WORKER REGISTER -->
   <script>
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('sw.js')
-        .then(() => console.log('PWA Service Worker Registered'))
-        .catch(err => console.log('SW Registration Failed:', err));
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js')
+          .then(reg => console.log('PWA Service Worker Registered:', reg.scope))
+          .catch(err => console.log('SW Registration Failed:', err));
+      });
     }
   </script>
 </body>
