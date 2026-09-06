@@ -31,7 +31,7 @@
       <div class="flex items-center gap-3">
         <img src="https://i.imgur.com/g3tuyhy.png" alt="App Logo" class="w-12 h-12 rounded-lg bg-white p-1 object-cover shadow">
         <div>
-          <h1 class="text-xl font-bold">🏫 Canteen POS</h1>
+          <h1 class="text-xl font-bold"> Canteen POS</h1>
           <p id="currentDateDisplay" class="text-xs text-blue-100"></p>
         </div>
       </div>
@@ -41,7 +41,7 @@
           <span id="totalSalesDisplay" class="text-2xl font-black">₱0.00</span>
         </div>
         <button type="button" onclick="openSalesReportModal()" class="bg-amber-400 hover:bg-amber-500 text-blue-900 font-extrabold px-4 py-2 rounded-lg shadow flex items-center gap-2 transition">
-          📊 Daily Sales Report
+           Daily Sales Report
         </button>
       </div>
     </header>
@@ -69,7 +69,7 @@
               </div>
             </div>
             <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded font-bold hover:bg-blue-700 transition">
-              ➕ Save Item & Barcode
+               Save Item & Barcode
             </button>
           </form>
 
@@ -85,13 +85,13 @@
           <div class="flex justify-between items-center border-b pb-2">
             <h2 class="text-lg font-bold text-gray-800">2. Scanner & Search</h2>
             <button type="button" onclick="openGcashModal()" class="bg-blue-100 hover:bg-blue-200 text-blue-800 text-xs font-extrabold px-3 py-1.5 rounded-lg border border-blue-300 transition">
-              📱 Show GCash QR
+               Show GCash QR
             </button>
           </div>
 
           <!-- MANUAL ITEM SEARCH DROPDOWN -->
           <div class="space-y-2 border-b pb-4">
-            <label class="block text-xs font-bold text-gray-600 uppercase">🔍 Manual Item Selection</label>
+            <label class="block text-xs font-bold text-gray-600 uppercase"> Manual Item Selection</label>
             <div class="flex gap-2">
               <select id="manualItemSelect" class="w-full border p-2 rounded text-sm bg-gray-50">
                 <option value="">-- Select or Search Item --</option>
@@ -122,7 +122,7 @@
           <div>
             <div class="flex justify-between items-center border-b pb-3 mb-4">
               <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
-                🛒 Current Order Cart
+                 Current Order Cart
               </h2>
               <button type="button" onclick="clearCart()" class="text-xs text-red-600 hover:underline font-bold">Clear Cart</button>
             </div>
@@ -151,11 +151,11 @@
               <div class="flex gap-4 text-sm font-bold">
                 <label class="flex items-center gap-1 cursor-pointer">
                   <input type="radio" name="paymentMethod" value="Cash" checked class="accent-blue-600">
-                  💵 Cash
+                   Cash
                 </label>
                 <label class="flex items-center gap-1 cursor-pointer">
                   <input type="radio" name="paymentMethod" value="GCash" class="accent-blue-600">
-                  📲 GCash
+                   GCash
                 </label>
               </div>
             </div>
@@ -166,7 +166,7 @@
             </div>
 
             <button type="button" onclick="processCheckout()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-lg py-3 rounded-lg shadow-lg transition flex items-center justify-center gap-2">
-              💳 Complete Checkout & Print Receipt
+               Complete Checkout & Print Receipt
             </button>
           </div>
         </section>
@@ -225,7 +225,7 @@
 
       <div class="flex gap-2 pt-2">
         <button type="button" onclick="window.print()" class="flex-1 bg-gray-800 text-white py-2 rounded-lg font-bold text-xs hover:bg-gray-900">
-          🖨️ Print Receipt
+           Print Receipt
         </button>
         <button type="button" onclick="closeReceiptModal()" class="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg font-bold text-xs hover:bg-gray-300">
           Close
@@ -238,7 +238,7 @@
   <div id="salesReportModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
     <div class="bg-white p-6 rounded-xl max-w-2xl w-full space-y-4 shadow-2xl max-h-[90vh] flex flex-col">
       <div class="flex justify-between items-center border-b pb-2">
-        <h3 class="text-lg font-bold text-gray-800">📊 Sales Report & History</h3>
+        <h3 class="text-lg font-bold text-gray-800"> Sales Report & History</h3>
         <button type="button" onclick="closeSalesReportModal()" class="text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
       </div>
 
@@ -248,11 +248,11 @@
           <span id="modalTotalSales" class="text-xl font-black text-blue-900">₱0.00</span>
         </div>
         <div class="bg-emerald-50 border border-emerald-200 p-3 rounded-lg">
-          <span class="text-xs text-emerald-700 font-bold uppercase block">💵 Total Cash</span>
+          <span class="text-xs text-emerald-700 font-bold uppercase block"> Total Cash</span>
           <span id="modalCashSales" class="text-xl font-black text-emerald-900">₱0.00</span>
         </div>
         <div class="bg-sky-50 border border-sky-200 p-3 rounded-lg">
-          <span class="text-xs text-sky-700 font-bold uppercase block">📲 Total GCash</span>
+          <span class="text-xs text-sky-700 font-bold uppercase block"> Total GCash</span>
           <span id="modalGcashSales" class="text-xl font-black text-sky-900">₱0.00</span>
         </div>
       </div>
@@ -276,7 +276,7 @@
         </div>
 
         <div>
-          <h4 class="text-sm font-bold text-gray-700 mb-2">📅 Daily Sales History:</h4>
+          <h4 class="text-sm font-bold text-gray-700 mb-2"> Daily Sales History:</h4>
           <div class="border rounded-lg overflow-hidden">
             <table class="w-full text-left border-collapse text-sm">
               <thead class="bg-gray-100">
@@ -295,7 +295,7 @@
 
       <div class="flex justify-between items-center pt-2 border-t">
         <button type="button" onclick="resetDailySalesData()" class="px-3 py-1.5 bg-red-100 text-red-700 text-xs font-bold rounded hover:bg-red-200 transition">
-          🔄 Reset Today's Sales
+           Reset Today's Sales
         </button>
         <button type="button" onclick="closeSalesReportModal()" class="px-4 py-2 bg-gray-800 text-white text-sm font-bold rounded-lg hover:bg-gray-900 transition">
           Close
@@ -450,10 +450,10 @@
             <td class="p-2 font-bold text-blue-600">${item.sold || 0}</td>
             <td class="p-2 text-center flex justify-center gap-1">
               <button type="button" onclick="openUpdateModal('${item.id}')" class="bg-amber-500 text-white px-2 py-1 rounded text-xs font-bold hover:bg-amber-600 transition">
-                ✏️ Edit
+                 Edit
               </button>
               <button type="button" onclick="deleteItem('${item.id}')" class="bg-red-600 text-white px-2 py-1 rounded text-xs font-bold hover:bg-red-700 transition">
-                🗑️ Delete
+                 Delete
               </button>
             </td>
           </tr>
