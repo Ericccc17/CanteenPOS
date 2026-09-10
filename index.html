@@ -1,203 +1,248 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- PWA Meta Tags -->
-  <link rel="manifest" href="manifest.json">
-  <meta name="theme-color" content="#2563eb">
-  <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="Canteen POS">
-
-  <!-- App Icon / Favicon -->
-  <link rel="icon" type="image/png" href="https://i.imgur.com/g3tuyhy.png">
-  <link rel="apple-touch-icon" href="https://i.imgur.com/g3tuyhy.png">
-
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Canteen POS & Realtime Sync</title>
+  <title>Canteen POS System</title>
+
+<link rel="icon" type="image/x-icon" href="https://i.imgur.com/g3tuyhy.png">
+  <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Firebase Compat SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
 </head>
-<body class="bg-gray-100 p-4 font-sans">
-  <div class="max-w-6xl mx-auto space-y-6">
-    
-    <!-- HEADER WITH APP LOGO -->
-    <header class="bg-blue-600 text-white p-4 rounded-lg shadow flex flex-col sm:flex-row justify-between items-center gap-4">
-      <div class="flex items-center gap-3">
-        <img src="https://i.imgur.com/g3tuyhy.png" alt="App Logo" class="w-12 h-12 rounded-lg bg-white p-1 object-cover shadow">
+<body class="bg-gray-100 font-sans min-h-screen p-4 md:p-6">
+
+  <!-- LOGIN OVERLAY / MODAL -->
+  <div id="loginScreen" class="fixed inset-0 bg-slate-900 flex items-center justify-center p-4 z-50">
+    <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-md space-y-6">
+      <div class="text-center flex flex-col items-center">
+        <!-- LOGO IN LOGIN SCREEN -->
+        <img src="https://i.imgur.com/g3tuyhy.png" alt="Canteen Logo" class="w-20 h-20 object-contain mb-2 rounded-xl border p-1 bg-gray-50 shadow-sm" onerror="this.src='https://via.placeholder.com/80?text=LOGO'">
+        <h1 class="text-3xl font-black text-gray-800">Canteen POS</h1>
+        <p class="text-sm text-gray-500 mt-1">Please log in to continue</p>
+      </div>
+
+      <form id="loginForm" class="space-y-4">
         <div>
-          <h1 class="text-xl font-bold"> Canteen POS</h1>
-          <p id="currentDateDisplay" class="text-xs text-blue-100"></p>
+          <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Username</label>
+          <input type="text" id="loginUser" required placeholder="Enter username" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-medium">
         </div>
-      </div>
-      <div class="flex items-center gap-4">
-        <div class="text-right">
-          <span class="text-xs block text-blue-100">Total Sales Today</span>
-          <span id="totalSalesDisplay" class="text-2xl font-black">₱0.00</span>
+        <div>
+          <label class="block text-xs font-bold text-gray-500 uppercase mb-1">Password</label>
+          <input type="password" id="loginPass" required placeholder="••••••••" class="w-full border p-3 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none font-medium">
         </div>
-        <button type="button" onclick="openSalesReportModal()" class="bg-amber-400 hover:bg-amber-500 text-blue-900 font-extrabold px-4 py-2 rounded-lg shadow flex items-center gap-2 transition">
-           Daily Sales Report
+        <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 rounded-lg transition shadow-md">
+          Sign In
         </button>
-      </div>
-    </header>
-
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      
-      <!-- COLUMN 1: MANUAL SELECTION & ADD NEW ITEM -->
-      <div class="space-y-6">
-        
-        <!-- MANUAL ITEM SELECTION -->
-        <section class="bg-white p-5 rounded-lg shadow space-y-4">
-          <div class="flex justify-between items-center border-b pb-2">
-            <h2 class="text-lg font-bold text-gray-800">1. Select Item to Sell</h2>
-            <button type="button" onclick="openGcashModal()" class="bg-blue-100 hover:bg-blue-200 text-blue-800 text-xs font-extrabold px-3 py-1.5 rounded-lg border border-blue-300 transition">
-               Show GCash QR
-            </button>
-          </div>
-
-          <div class="space-y-3">
-            <div>
-              <label class="block text-xs font-bold text-gray-600 uppercase mb-1"> Search / Choose Item</label>
-              <select id="manualItemSelect" class="w-full border p-2.5 rounded-lg text-sm bg-gray-50 focus:ring-2 focus:ring-blue-500 font-medium">
-                <option value="">-- Select Item --</option>
-              </select>
-            </div>
-
-            <div class="flex items-center gap-2">
-              <div class="w-1/3">
-                <label class="block text-xs font-bold text-gray-600 uppercase mb-1">Quantity</label>
-                <input type="number" id="manualQty" value="1" min="1" class="w-full border p-2 text-center font-bold rounded-lg text-sm">
-              </div>
-              <div class="w-2/3 pt-5">
-                <button type="button" onclick="addManualItemToCart()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2 px-3 rounded-lg font-bold text-sm transition flex items-center justify-center gap-1">
-                   Add to Cart
-                </button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <!-- ADD NEW ITEM TO INVENTORY -->
-        <section class="bg-white p-5 rounded-lg shadow">
-          <h2 class="text-lg font-bold mb-4 text-gray-800 border-b pb-2">2. Add New Product</h2>
-          <form id="addItemForm" class="space-y-3">
-            <div>
-              <label class="block text-sm font-medium">Item Name</label>
-              <input type="text" id="itemName" required placeholder="e.g., Bottled Water" class="w-full border p-2 rounded">
-            </div>
-            <div class="grid grid-cols-2 gap-2">
-              <div>
-                <label class="block text-sm font-medium">Price (₱)</label>
-                <input type="number" step="0.01" id="itemPrice" required placeholder="15.00" class="w-full border p-2 rounded">
-              </div>
-              <div>
-                <label class="block text-sm font-medium">Initial Stock</label>
-                <input type="number" id="itemStock" required placeholder="50" class="w-full border p-2 rounded">
-              </div>
-            </div>
-            <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded font-bold hover:bg-blue-700 transition">
-               Save Item
-            </button>
-          </form>
-        </section>
-
-      </div>
-
-      <!-- COLUMN 2: SHOPPING CART & CHECKOUT -->
-      <div class="lg:col-span-2 space-y-6">
-        <section class="bg-white p-5 rounded-lg shadow flex flex-col justify-between min-h-[500px]">
-          <div>
-            <div class="flex justify-between items-center border-b pb-3 mb-4">
-              <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
-                🛒 Current Order Cart
-              </h2>
-              <button type="button" onclick="clearCart()" class="text-xs text-red-600 hover:underline font-bold">Clear Cart</button>
-            </div>
-
-            <!-- CART TABLE -->
-            <div class="overflow-x-auto">
-              <table class="w-full text-left border-collapse">
-                <thead>
-                  <tr class="bg-gray-100 border-b text-xs text-gray-600 uppercase">
-                    <th class="p-2">Item</th>
-                    <th class="p-2">Price</th>
-                    <th class="p-2 text-center">Qty</th>
-                    <th class="p-2 text-right">Subtotal</th>
-                    <th class="p-2 text-center">Action</th>
-                  </tr>
-                </thead>
-                <tbody id="cartTable" class="text-sm"></tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- CHECKOUT SECTION -->
-          <div class="border-t pt-4 mt-6 bg-gray-50 -mx-5 -mb-5 p-5 rounded-b-lg space-y-4">
-            <div class="flex justify-between items-center">
-              <span class="text-sm font-bold text-gray-600">Payment Method:</span>
-              <div class="flex gap-4 text-sm font-bold">
-                <label class="flex items-center gap-1 cursor-pointer">
-                  <input type="radio" name="paymentMethod" value="Cash" checked class="accent-blue-600">
-                   Cash
-                </label>
-                <label class="flex items-center gap-1 cursor-pointer">
-                  <input type="radio" name="paymentMethod" value="GCash" class="accent-blue-600">
-                   GCash
-                </label>
-              </div>
-            </div>
-
-            <div class="flex justify-between items-center">
-              <span class="text-xl font-bold text-gray-800">Grand Total:</span>
-              <span id="cartGrandTotal" class="text-3xl font-black text-blue-700">₱0.00</span>
-            </div>
-
-            <button type="button" onclick="processCheckout()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-extrabold text-lg py-3 rounded-lg shadow-lg transition flex items-center justify-center gap-2">
-               Complete Checkout & Print Receipt
-            </button>
-          </div>
-        </section>
-
-        <!-- INVENTORY TABLE -->
-        <section class="bg-white p-5 rounded-lg shadow">
-          <h2 class="text-lg font-bold mb-4 text-gray-800 border-b pb-2">3. Inventory Status</h2>
-          <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
-              <thead>
-                <tr class="bg-gray-100 border-b text-sm">
-                  <th class="p-2">Item Name</th>
-                  <th class="p-2">Price</th>
-                  <th class="p-2">Stock Left</th>
-                  <th class="p-2">Sold Today</th>
-                  <th class="p-2 text-center">Actions</th>
-                </tr>
-              </thead>
-              <tbody id="inventoryTable" class="text-sm"></tbody>
-            </table>
-          </div>
-        </section>
-      </div>
-
+      </form>
     </div>
   </div>
 
-  <!-- RECEIPT MODAL -->
-  <div id="receiptModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
-    <div class="bg-white p-6 rounded-xl max-w-sm w-full space-y-4 shadow-2xl">
-      <div class="text-center border-b pb-3">
-        <h3 class="font-black text-lg text-gray-800">🏫 CANTEEN RECEIPT</h3>
-        <p id="receiptDate" class="text-xs text-gray-500"></p>
-        <p id="receiptPaymentType" class="text-xs font-bold text-blue-600 mt-1 uppercase"></p>
+  <!-- MAIN APP CONTAINER -->
+  <div id="appContainer" class="max-w-7xl mx-auto space-y-6 hidden">
+
+    <!-- HEADER / DASHBOARD SUMMARY -->
+    <div class="bg-white p-6 rounded-xl shadow-md flex flex-col md:flex-row justify-between items-center gap-4 border-l-4 border-blue-600">
+      <div class="flex items-center gap-4">
+        <!-- LOGO IN HEADER -->
+        <img src="https://i.imgur.com/g3tuyhy.png" alt="Canteen Logo" class="w-14 h-14 object-contain rounded-xl border p-1 bg-gray-50 shadow-sm" onerror="this.src='https://via.placeholder.com/60?text=LOGO'">
+        <div>
+          <div class="flex items-center gap-3">
+            <h1 class="text-2xl md:text-3xl font-extrabold text-gray-800">Canteen POS System</h1>
+            <span id="userRoleBadge" class="bg-blue-100 text-blue-800 text-xs font-bold px-3 py-1 rounded-full uppercase"></span>
+          </div>
+          <p id="currentDateDisplay" class="text-sm font-semibold text-gray-500 mt-1">Date: Loading...</p>
+        </div>
       </div>
 
-      <div class="max-h-60 overflow-y-auto">
-        <table class="w-full text-xs text-left border-collapse">
+      <div class="flex items-center gap-3 flex-wrap">
+        <div class="bg-green-50 p-3 rounded-lg border border-green-200 text-right">
+          <span class="text-xs font-bold text-green-600 block uppercase tracking-wider">Today's Total Sales</span>
+          <span id="totalSalesDisplay" class="text-2xl font-black text-green-700">₱0.00</span>
+        </div>
+        <button type="button" id="btnSalesReport" onclick="openSalesReportModal()" class="bg-blue-600 text-white font-bold px-4 py-3 rounded-lg hover:bg-blue-700 shadow-md transition">
+          📊 Sales Report & Void
+        </button>
+        <button type="button" onclick="logout()" class="bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold px-3 py-3 rounded-lg transition text-sm">
+          🚪 Logout
+        </button>
+      </div>
+    </div>
+
+    <!-- MAIN WORKSPACE -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+      <!-- LEFT COLUMN: ITEM SEARCH & GRID / INVENTORY -->
+      <div class="lg:col-span-2 space-y-6">
+
+        <!-- SEARCH ITEMS BAR & GRID DISPLAY -->
+        <div class="bg-white p-5 rounded-xl shadow-md border space-y-4">
+          <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+            <h2 class="text-lg font-bold text-gray-700">🍔 Menu Items</h2>
+            <!-- REAL-TIME SEARCH INPUT -->
+            <div class="w-full sm:w-72">
+              <input type="text" id="searchItemInput" oninput="renderItemsGrid()" placeholder="🔍 Type to search item..." class="w-full border p-2.5 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 outline-none font-medium shadow-sm">
+            </div>
+          </div>
+
+          <!-- ITEMS GRID (Clickable Cards) -->
+          <div id="itemsGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 max-h-96 overflow-y-auto p-1">
+            <!-- Dynamic Item Cards -->
+          </div>
+        </div>
+
+        <!-- ADD ITEM FORM (ADMIN/CASHIER) -->
+        <div id="addItemSection" class="bg-white p-5 rounded-xl shadow-md border">
+          <h2 class="text-lg font-bold text-gray-700 mb-3">➕ Add New Item</h2>
+          <form id="addItemForm" class="grid grid-cols-1 sm:grid-cols-4 gap-3">
+            <input type="text" id="itemName" placeholder="Item Name" required class="border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none">
+            <input type="number" step="0.01" id="itemPrice" placeholder="Price (₱)" required class="border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none">
+            <input type="number" id="itemStock" placeholder="Stock Qty" required class="border p-2 rounded focus:ring-2 focus:ring-blue-500 outline-none">
+            <button type="submit" class="bg-emerald-600 text-white font-bold py-2 px-4 rounded hover:bg-emerald-700 transition">Save Item</button>
+          </form>
+        </div>
+
+        <!-- INVENTORY TABLE -->
+        <div class="bg-white p-5 rounded-xl shadow-md border">
+          <h2 class="text-lg font-bold text-gray-700 mb-3">📦 Current Inventory Management</h2>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse">
+              <thead>
+                <tr class="border-b bg-gray-50 text-gray-600 text-sm">
+                  <th class="p-2">Item Name</th>
+                  <th class="p-2">Price</th>
+                  <th class="p-2">Stock</th>
+                  <th class="p-2">Sold Today</th>
+                  <th class="p-2 text-center admin-only">Action</th>
+                </tr>
+              </thead>
+              <tbody id="inventoryTable" class="text-sm">
+                <!-- Dynamic Items -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- RIGHT COLUMN: POINT OF SALE (CART & SUKLICULATOR) -->
+      <div class="space-y-6">
+
+        <div class="bg-white p-5 rounded-xl shadow-md border space-y-4 sticky top-6">
+          <h2 class="text-lg font-bold text-gray-700">🛒 Cart / Counter</h2>
+
+          <!-- CART TABLE -->
+          <div class="overflow-x-auto max-h-64 border rounded">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead class="bg-gray-100 text-gray-600 sticky top-0">
+                <tr>
+                  <th class="p-2">Item</th>
+                  <th class="p-2">Price</th>
+                  <th class="p-2 text-center">Qty</th>
+                  <th class="p-2 text-right">Total</th>
+                  <th class="p-2 text-center"></th>
+                </tr>
+              </thead>
+              <tbody id="cartTable">
+                <!-- Dynamic Cart Items -->
+              </tbody>
+            </table>
+          </div>
+
+          <!-- GRAND TOTAL & SUKLICULATOR -->
+          <div class="border-t pt-3 space-y-3">
+            <div class="flex justify-between items-center text-lg font-black">
+              <span>Grand Total:</span>
+              <span id="cartGrandTotal" class="text-blue-600 text-xl">₱0.00</span>
+            </div>
+
+            <div class="space-y-1">
+              <label class="text-xs font-bold text-gray-500 uppercase block">Payment Method</label>
+              <div class="grid grid-cols-2 gap-2">
+                <label class="flex items-center justify-center gap-2 border p-2 rounded-lg cursor-pointer hover:bg-gray-50 font-bold text-sm">
+                  <input type="radio" name="paymentMethod" value="Cash" checked class="accent-blue-600"> 💵 Cash
+                </label>
+                <label class="flex items-center justify-center gap-2 border p-2 rounded-lg cursor-pointer hover:bg-gray-50 font-bold text-sm">
+                  <input type="radio" name="paymentMethod" value="GCash" class="accent-blue-600"> 💙 GCash
+                </label>
+              </div>
+            </div>
+
+            <!-- SUKLICULATOR SECTION -->
+            <div class="bg-amber-50 p-3 rounded-lg border border-amber-200 space-y-2">
+              <div class="flex items-center justify-between">
+                <label class="text-xs font-bold text-amber-800 uppercase flex items-center gap-1">🧮 Sukliculator (Change)</label>
+              </div>
+              <div class="grid grid-cols-2 gap-2">
+                <div>
+                  <span class="text-[10px] font-bold text-gray-500 uppercase">Bayad ng Customer</span>
+                  <input type="number" id="cashReceivedInput" oninput="calculateSukli()" placeholder="0.00" step="0.01" class="w-full border p-2 rounded font-black text-sm text-gray-800 focus:ring-2 focus:ring-amber-500 outline-none">
+                </div>
+                <div>
+                  <span class="text-[10px] font-bold text-gray-500 uppercase">Sukli</span>
+                  <div id="sukliDisplay" class="w-full border p-2 rounded font-black text-sm bg-white text-green-700 flex items-center h-[38px]">
+                    ₱0.00
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="flex gap-2">
+              <button type="button" onclick="clearCart()" class="w-1/3 bg-gray-200 text-gray-700 font-bold py-2 rounded hover:bg-gray-300 transition text-xs">Clear Cart</button>
+              <button type="button" onclick="processCheckout()" class="w-2/3 bg-green-600 text-white font-bold py-2.5 rounded hover:bg-green-700 shadow transition text-sm">Checkout</button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- MODAL: EDIT INVENTORY ITEM (ADMIN ONLY) -->
+  <div id="updateModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white p-6 rounded-xl w-full max-w-md shadow-2xl space-y-4">
+      <h3 id="modalTitle" class="text-lg font-bold text-gray-800">Update Item</h3>
+      <input type="hidden" id="editItemId">
+      <div>
+        <label class="text-xs font-bold text-gray-500">Item Name</label>
+        <input type="text" id="editItemName" class="w-full border p-2 rounded font-medium">
+      </div>
+      <div>
+        <label class="text-xs font-bold text-gray-500">Price (₱)</label>
+        <input type="number" step="0.01" id="editItemPrice" class="w-full border p-2 rounded font-medium">
+      </div>
+      <div>
+        <label class="text-xs font-bold text-gray-500">Add Stock Qty</label>
+        <input type="number" id="editAddStock" placeholder="0" class="w-full border p-2 rounded font-medium">
+      </div>
+      <div class="flex justify-end gap-2 pt-2">
+        <button type="button" onclick="closeModal()" class="px-4 py-2 bg-gray-200 text-gray-700 font-bold rounded text-sm">Cancel</button>
+        <button type="button" onclick="saveItemUpdate()" class="px-4 py-2 bg-blue-600 text-white font-bold rounded text-sm hover:bg-blue-700">Save Changes</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: RECEIPT -->
+  <div id="receiptModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white p-6 rounded-xl w-full max-w-sm shadow-2xl space-y-4 border text-center">
+      <div class="border-b pb-2 flex flex-col items-center">
+        <!-- LOGO IN RECEIPT -->
+        <img src="https://i.imgur.com/g3tuyhy.png" alt="Canteen Logo" class="w-12 h-12 object-contain mb-1" onerror="this.src='https://via.placeholder.com/50?text=LOGO'">
+        <h3 class="text-xl font-black text-gray-800">CANTEEN RECEIPT</h3>
+        <p id="receiptTxnId" class="text-xs text-gray-400 font-mono mt-1"></p>
+        <p id="receiptDate" class="text-xs text-gray-500"></p>
+        <p id="receiptPaymentType" class="text-xs font-bold text-blue-600 mt-1"></p>
+      </div>
+      <div class="text-left max-h-48 overflow-y-auto">
+        <table class="w-full text-xs">
           <thead>
-            <tr class="border-b font-bold text-gray-600">
-              <th class="py-1">Item</th>
+            <tr class="border-b text-gray-500">
+              <th class="py-1 text-left">Item</th>
               <th class="py-1 text-center">Qty</th>
               <th class="py-1 text-right">Price</th>
               <th class="py-1 text-right">Total</th>
@@ -206,134 +251,114 @@
           <tbody id="receiptItemsTable"></tbody>
         </table>
       </div>
-
-      <div class="border-t pt-2 flex justify-between items-center text-base font-black">
-        <span>TOTAL PAID:</span>
-        <span id="receiptTotal" class="text-emerald-700">₱0.00</span>
+      <div class="border-t pt-2 space-y-1 font-bold text-sm">
+        <div class="flex justify-between items-center text-lg font-black">
+          <span>TOTAL:</span>
+          <span id="receiptTotal" class="text-green-600">₱0.00</span>
+        </div>
+        <div class="flex justify-between items-center text-gray-600 text-xs">
+          <span>Amount Paid:</span>
+          <span id="receiptCash">₱0.00</span>
+        </div>
+        <div class="flex justify-between items-center text-xs">
+          <span>Change:</span>
+          <span id="receiptChange" class="font-bold text-blue-600">₱0.00</span>
+        </div>
       </div>
-
-      <div class="flex gap-2 pt-2">
-        <button type="button" onclick="window.print()" class="flex-1 bg-gray-800 text-white py-2 rounded-lg font-bold text-xs hover:bg-gray-900">
-          🖨️ Print Receipt
-        </button>
-        <button type="button" onclick="closeReceiptModal()" class="flex-1 bg-gray-200 text-gray-800 py-2 rounded-lg font-bold text-xs hover:bg-gray-300">
-          Close
-        </button>
-      </div>
+      <button type="button" onclick="closeReceiptModal()" class="w-full bg-blue-600 text-white font-bold py-2 rounded hover:bg-blue-700 transition text-sm">Done / Print</button>
     </div>
   </div>
 
-  <!-- SALES REPORT MODAL -->
-  <div id="salesReportModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
-    <div class="bg-white p-6 rounded-xl max-w-2xl w-full space-y-4 shadow-2xl max-h-[90vh] flex flex-col">
-      <div class="flex justify-between items-center border-b pb-2">
-        <h3 class="text-lg font-bold text-gray-800"> Sales Report & History</h3>
-        <button type="button" onclick="closeSalesReportModal()" class="text-gray-400 hover:text-gray-600 text-xl font-bold">&times;</button>
+  <!-- MODAL: SALES REPORT, VOID, HISTORY & EXPORT -->
+  <div id="salesReportModal" class="fixed inset-0 bg-black/50 hidden flex items-center justify-center p-4 z-50">
+    <div class="bg-white p-6 rounded-xl w-full max-w-3xl shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+      <div class="flex justify-between items-center border-b pb-3">
+        <h3 class="text-xl font-extrabold text-gray-800">📊 Sales Summary, Void & History</h3>
+        <button type="button" onclick="closeSalesReportModal()" class="text-gray-400 hover:text-gray-600 font-black text-lg">&times;</button>
       </div>
 
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div class="bg-blue-50 border border-blue-200 p-3 rounded-lg">
-          <span class="text-xs text-blue-700 font-bold uppercase block">Total Sales Today</span>
-          <span id="modalTotalSales" class="text-xl font-black text-blue-900">₱0.00</span>
+      <!-- TODAY BREAKDOWN -->
+      <div class="grid grid-cols-3 gap-3 text-center">
+        <div class="bg-blue-50 p-3 rounded-lg border border-blue-200">
+          <span class="text-xs font-bold text-blue-600 block">Total Today</span>
+          <span id="modalTotalSales" class="text-lg font-black text-blue-700">₱0.00</span>
         </div>
-        <div class="bg-emerald-50 border border-emerald-200 p-3 rounded-lg">
-          <span class="text-xs text-emerald-700 font-bold uppercase block"> Total Cash</span>
-          <span id="modalCashSales" class="text-xl font-black text-emerald-900">₱0.00</span>
+        <div class="bg-emerald-50 p-3 rounded-lg border border-emerald-200">
+          <span class="text-xs font-bold text-emerald-600 block">Cash Sales</span>
+          <span id="modalCashSales" class="text-lg font-black text-emerald-700">₱0.00</span>
         </div>
-        <div class="bg-sky-50 border border-sky-200 p-3 rounded-lg">
-          <span class="text-xs text-sky-700 font-bold uppercase block"> Total GCash</span>
-          <span id="modalGcashSales" class="text-xl font-black text-sky-900">₱0.00</span>
-        </div>
-      </div>
-
-      <div class="overflow-y-auto space-y-6 flex-1 pr-1">
-        <div>
-          <h4 class="text-sm font-bold text-gray-700 mb-2">Item Sales Breakdown Today:</h4>
-          <div class="border rounded-lg overflow-hidden">
-            <table class="w-full text-left border-collapse text-sm">
-              <thead class="bg-gray-100">
-                <tr class="border-b">
-                  <th class="p-2">Item</th>
-                  <th class="p-2 text-center">Qty Sold</th>
-                  <th class="p-2 text-right">Price</th>
-                  <th class="p-2 text-right">Subtotal</th>
-                </tr>
-              </thead>
-              <tbody id="salesReportTable"></tbody>
-            </table>
-          </div>
-        </div>
-
-        <div>
-          <h4 class="text-sm font-bold text-gray-700 mb-2"> Daily Sales History:</h4>
-          <div class="border rounded-lg overflow-hidden">
-            <table class="w-full text-left border-collapse text-sm">
-              <thead class="bg-gray-100">
-                <tr class="border-b">
-                  <th class="p-2">Date</th>
-                  <th class="p-2 text-right">Cash Total</th>
-                  <th class="p-2 text-right">GCash Total</th>
-                  <th class="p-2 text-right">Total Revenue</th>
-                </tr>
-              </thead>
-              <tbody id="historyTable"></tbody>
-            </table>
-          </div>
+        <div class="bg-sky-50 p-3 rounded-lg border border-sky-200">
+          <span class="text-xs font-bold text-sky-600 block">GCash Sales</span>
+          <span id="modalGcashSales" class="text-lg font-black text-sky-700">₱0.00</span>
         </div>
       </div>
 
+      <!-- TODAY RECENT TRANSACTIONS (FOR VOID/REFUND) -->
+      <div>
+        <h4 class="font-bold text-sm text-gray-700 mb-2">Recent Transactions Today (Void/Refund)</h4>
+        <div class="border rounded overflow-hidden max-h-48 overflow-y-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-gray-100 font-bold text-gray-600">
+              <tr>
+                <th class="p-2">Time</th>
+                <th class="p-2">Items</th>
+                <th class="p-2 text-center">Method</th>
+                <th class="p-2 text-right">Amount</th>
+                <th class="p-2 text-center">Action</th>
+              </tr>
+            </thead>
+            <tbody id="todayTransactionsTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- TODAY ITEM BREAKDOWN -->
+      <div>
+        <h4 class="font-bold text-sm text-gray-700 mb-2">Item Sales Breakdown (Today)</h4>
+        <div class="border rounded overflow-hidden max-h-36 overflow-y-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-gray-100 font-bold text-gray-600">
+              <tr>
+                <th class="p-2">Item Name</th>
+                <th class="p-2 text-center">Qty Sold</th>
+                <th class="p-2 text-right">Unit Price</th>
+                <th class="p-2 text-right">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody id="salesReportTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- PAST DAYS HISTORY -->
+      <div>
+        <h4 class="font-bold text-sm text-gray-700 mb-2">Past Sales History</h4>
+        <div class="border rounded overflow-hidden max-h-36 overflow-y-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-gray-100 font-bold text-gray-600">
+              <tr>
+                <th class="p-2">Date</th>
+                <th class="p-2 text-right">Cash</th>
+                <th class="p-2 text-right">GCash</th>
+                <th class="p-2 text-right">Total</th>
+              </tr>
+            </thead>
+            <tbody id="historyTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- MODAL ACTION BUTTONS -->
       <div class="flex justify-between items-center pt-2 border-t">
-        <button type="button" onclick="resetDailySalesData()" class="px-3 py-1.5 bg-red-100 text-red-700 text-xs font-bold rounded hover:bg-red-200 transition">
-           Reset Today's Sales
+        <button type="button" onclick="exportSalesReportToCSV()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-lg text-sm transition shadow flex items-center gap-2">
+          📥 Export Report to CSV
         </button>
-        <button type="button" onclick="closeSalesReportModal()" class="px-4 py-2 bg-gray-800 text-white text-sm font-bold rounded-lg hover:bg-gray-900 transition">
-          Close
-        </button>
+        <button type="button" onclick="closeSalesReportModal()" class="px-5 py-2 bg-gray-200 text-gray-800 font-bold rounded-lg hover:bg-gray-300 text-sm">Close</button>
       </div>
     </div>
   </div>
 
-  <!-- EDIT ITEM MODAL -->
-  <div id="updateModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
-    <div class="bg-white p-6 rounded-lg max-w-sm w-full space-y-4 shadow-xl">
-      <h3 class="text-lg font-bold text-gray-800 border-b pb-2" id="modalTitle">Update Item</h3>
-      <input type="hidden" id="editItemId">
-      <div>
-        <label class="block text-sm font-medium">Item Name</label>
-        <input type="text" id="editItemName" class="w-full border p-2 rounded">
-      </div>
-      <div>
-        <label class="block text-sm font-medium">Price (₱)</label>
-        <input type="number" step="0.01" id="editItemPrice" class="w-full border p-2 rounded">
-      </div>
-      <div>
-        <label class="block text-sm font-medium">Add Stock (+Qty)</label>
-        <input type="number" id="editAddStock" placeholder="0" class="w-full border p-2 rounded">
-      </div>
-      <div class="flex justify-end space-x-2 pt-2 border-t">
-        <button type="button" onclick="closeModal()" class="px-4 py-2 bg-gray-300 text-gray-700 rounded font-bold">Cancel</button>
-        <button type="button" onclick="saveItemUpdate()" class="px-4 py-2 bg-green-600 text-white rounded font-bold hover:bg-green-700">Save Changes</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- GCASH QR MODAL -->
-  <div id="gcashModal" class="fixed inset-0 bg-black bg-opacity-50 hidden flex items-center justify-center p-4 z-50">
-    <div class="bg-white p-6 rounded-xl max-w-xs w-full text-center space-y-4 shadow-2xl">
-      <div class="flex justify-between items-center border-b pb-2">
-        <h3 class="font-bold text-blue-600">Scan to Pay via GCash</h3>
-        <button type="button" onclick="closeGcashModal()" class="text-gray-400 hover:text-gray-600 text-2xl font-bold px-2 cursor-pointer">&times;</button>
-      </div>
-      <div class="border p-2 rounded bg-gray-50 inline-block">
-        <img src="https://i.imgur.com/6eCyM1C.jpeg" alt="GCash QR Code" class="w-48 h-48 mx-auto rounded object-contain">
-      </div>
-      <p class="text-xs text-gray-500">Scan using the GCash app to transfer payment.</p>
-      <button type="button" onclick="closeGcashModal()" class="w-full py-2 bg-blue-600 text-white text-sm font-bold rounded-lg hover:bg-blue-700 transition cursor-pointer">
-        Done / Close
-      </button>
-    </div>
-  </div>
-
+  <!-- JAVASCRIPT LOGIC -->
   <script>
     const firebaseConfig = {
       apiKey: "AIzaSyAcAffvYhI7qD4I01D4Mgvp3oTt99Rdsmg",
@@ -352,6 +377,58 @@
     let inventory = [];
     let cart = [];
     let dailySalesHistory = {};
+    let transactionsToday = [];
+    let currentUser = null;
+    let currentGrandTotal = 0;
+
+    const users = {
+      admin: { pass: 'scadminonly', role: 'admin' },
+      cashier: { pass: 'sccashier123', role: 'cashier' }
+    };
+
+    document.getElementById('loginForm').addEventListener('submit', (e) => {
+      e.preventDefault();
+      const u = document.getElementById('loginUser').value.trim().toLowerCase();
+      const p = document.getElementById('loginPass').value.trim();
+
+      if (users[u] && users[u].pass === p) {
+        currentUser = { username: u, role: users[u].role };
+        document.getElementById('loginScreen').classList.add('hidden');
+        document.getElementById('appContainer').classList.remove('hidden');
+        applyRolePermissions();
+      } else {
+        alert("Maling Username o Password!");
+      }
+    });
+
+    function logout() {
+      currentUser = null;
+      document.getElementById('loginForm').reset();
+      document.getElementById('appContainer').classList.add('hidden');
+      document.getElementById('loginScreen').classList.remove('hidden');
+    }
+
+    function applyRolePermissions() {
+      const isAdmin = currentUser && currentUser.role === 'admin';
+      
+      document.getElementById('userRoleBadge').innerText = `${currentUser.role} (${currentUser.username})`;
+      document.getElementById('addItemSection').classList.remove('hidden');
+
+      // Direct set of readable date upon login
+      document.getElementById('currentDateDisplay').innerText = `Date: ${getReadableDate(todayKey)}`;
+
+      const adminElements = document.querySelectorAll('.admin-only');
+      adminElements.forEach(el => {
+        if (isAdmin) {
+          el.classList.remove('hidden');
+        } else {
+          el.classList.add('hidden');
+        }
+      });
+
+      renderInventory();
+      renderItemsGrid();
+    }
 
     function getTodayKey() {
       const d = new Date();
@@ -367,7 +444,7 @@
       return dateStr;
     }
 
-    const todayKey = getTodayKey();
+    let todayKey = getTodayKey();
 
     function getTodaySalesSummary() {
       const currentRecord = dailySalesHistory[todayKey] || { cash: 0, gcash: 0, total: 0 };
@@ -377,49 +454,132 @@
       return currentRecord;
     }
 
-    // Realtime Sync Listener
     db.ref('canteen').on('value', (snapshot) => {
       const data = snapshot.val() || {};
       inventory = data.inventory || [];
       dailySalesHistory = data.dailySalesHistory || {};
+      transactionsToday = data.transactionsToday || [];
 
+      checkAndPerformAutoReset();
+      document.getElementById('currentDateDisplay').innerText = `Date: ${getReadableDate(todayKey)}`;
       renderInventory();
-      populateManualSelectOptions();
+      renderItemsGrid();
     });
 
     function syncToCloud() {
       db.ref('canteen').set({
         inventory: inventory,
-        dailySalesHistory: dailySalesHistory
+        dailySalesHistory: dailySalesHistory,
+        transactionsToday: transactionsToday
       });
     }
 
-    function populateManualSelectOptions() {
-      const select = document.getElementById('manualItemSelect');
-      select.innerHTML = '<option value="">-- Select Item --</option>';
-      inventory.forEach(item => {
-        select.innerHTML += `<option value="${item.id}">${item.name} - ₱${item.price.toFixed(2)} (${item.stock} stock left)</option>`;
+    function checkAndPerformAutoReset() {
+      const realTodayKey = getTodayKey();
+
+      if (todayKey !== realTodayKey) {
+        todayKey = realTodayKey;
+
+        inventory.forEach(item => { item.sold = 0; });
+        transactionsToday = [];
+
+        if (!dailySalesHistory[todayKey]) {
+          dailySalesHistory[todayKey] = { cash: 0, gcash: 0, total: 0 };
+        }
+
+        syncToCloud();
+        document.getElementById('currentDateDisplay').innerText = `Date: ${getReadableDate(todayKey)}`;
+      }
+
+      scheduleMidnightAutoReset();
+    }
+
+    function scheduleMidnightAutoReset() {
+      const now = new Date();
+      const midnight = new Date();
+      midnight.setHours(24, 0, 0, 0);
+
+      const timeUntilMidnight = midnight.getTime() - now.getTime();
+
+      if (window.midnightTimer) clearTimeout(window.midnightTimer);
+
+      window.midnightTimer = setTimeout(() => {
+        checkAndPerformAutoReset();
+      }, timeUntilMidnight);
+    }
+
+    /* RENDER ITEMS GRID WITH SEARCH */
+    function renderItemsGrid() {
+      const grid = document.getElementById('itemsGrid');
+      const searchQuery = document.getElementById('searchItemInput').value.toLowerCase().trim();
+      grid.innerHTML = '';
+
+      const filteredItems = inventory.filter(item => item.name.toLowerCase().includes(searchQuery));
+
+      if (filteredItems.length === 0) {
+        grid.innerHTML = `<div class="col-span-full text-center text-gray-400 py-6 font-medium">Walang nahanap na item na "${searchQuery}"</div>`;
+        return;
+      }
+
+      filteredItems.forEach(item => {
+        const isOutOfStock = item.stock <= 0;
+        grid.innerHTML += `
+          <button type="button" 
+            onclick="${isOutOfStock ? '' : `addItemToCart('${item.id}')`}" 
+            class="p-3 border rounded-xl text-left bg-white hover:border-blue-500 hover:shadow-md transition flex flex-col justify-between ${isOutOfStock ? 'opacity-50 cursor-not-allowed bg-gray-50' : 'cursor-pointer active:scale-95'}">
+            <div>
+              <h3 class="font-bold text-gray-800 text-sm leading-tight">${item.name}</h3>
+              <p class="text-blue-600 font-extrabold text-sm mt-1">₱${item.price.toFixed(2)}</p>
+            </div>
+            <div class="mt-2 text-[11px] font-bold ${item.stock < 5 ? 'text-red-500' : 'text-gray-400'}">
+              ${isOutOfStock ? '❌ Out of Stock' : `Stock: ${item.stock}`}
+            </div>
+          </button>
+        `;
       });
+    }
+
+    /* SUKLICULATOR LOGIC */
+    function calculateSukli() {
+      const cashReceived = parseFloat(document.getElementById('cashReceivedInput').value) || 0;
+      const sukliDisplay = document.getElementById('sukliDisplay');
+      
+      if (cashReceived === 0 && currentGrandTotal === 0) {
+        sukliDisplay.innerText = "₱0.00";
+        sukliDisplay.className = "w-full border p-2 rounded font-black text-sm bg-white text-green-700 flex items-center h-[38px]";
+        return;
+      }
+
+      const sukli = cashReceived - currentGrandTotal;
+
+      if (sukli < 0) {
+        sukliDisplay.innerText = `Kulang pa ng ₱${Math.abs(sukli).toFixed(2)}`;
+        sukliDisplay.className = "w-full border p-2 rounded font-black text-sm bg-red-50 text-red-600 flex items-center h-[38px]";
+      } else {
+        sukliDisplay.innerText = `₱${sukli.toFixed(2)}`;
+        sukliDisplay.className = "w-full border p-2 rounded font-black text-sm bg-green-50 text-green-700 flex items-center h-[38px]";
+      }
     }
 
     function renderInventory() {
       const tbody = document.getElementById('inventoryTable');
       tbody.innerHTML = '';
+      const isAdmin = currentUser && currentUser.role === 'admin';
+
       inventory.forEach(item => {
+        const actionTd = isAdmin ? `
+          <td class="p-2 text-center flex justify-center gap-1 admin-only">
+            <button type="button" onclick="openUpdateModal('${item.id}')" class="bg-amber-500 text-white px-2 py-1 rounded text-xs font-bold hover:bg-amber-600 transition">✏️ Edit</button>
+            <button type="button" onclick="deleteItem('${item.id}')" class="bg-red-600 text-white px-2 py-1 rounded text-xs font-bold hover:bg-red-700 transition">🗑️ Delete</button>
+          </td>` : '';
+
         tbody.innerHTML += `
           <tr class="border-b hover:bg-gray-50">
             <td class="p-2 font-bold">${item.name}</td>
             <td class="p-2">₱${item.price.toFixed(2)}</td>
             <td class="p-2 ${item.stock < 5 ? 'text-red-600 font-bold' : ''}">${item.stock}</td>
             <td class="p-2 font-bold text-blue-600">${item.sold || 0}</td>
-            <td class="p-2 text-center flex justify-center gap-1">
-              <button type="button" onclick="openUpdateModal('${item.id}')" class="bg-amber-500 text-white px-2 py-1 rounded text-xs font-bold hover:bg-amber-600 transition">
-                 Edit
-              </button>
-              <button type="button" onclick="deleteItem('${item.id}')" class="bg-red-600 text-white px-2 py-1 rounded text-xs font-bold hover:bg-red-700 transition">
-                 Delete
-              </button>
-            </td>
+            ${actionTd}
           </tr>
         `;
       });
@@ -429,6 +589,7 @@
     }
 
     function deleteItem(itemId) {
+      if (currentUser.role !== 'admin') return;
       const item = inventory.find(i => i.id === itemId);
       if (!item) return;
 
@@ -438,7 +599,6 @@
       }
     }
 
-    // CART OPERATIONS
     function addItemToCart(itemId, qty = 1) {
       const item = inventory.find(i => i.id === itemId);
       if (!item) return;
@@ -447,7 +607,7 @@
       const currentCartQty = existingCartItem ? existingCartItem.qty : 0;
 
       if (item.stock < currentCartQty + qty) {
-        alert(`Not enough stock for ${item.name}! Maximum available: ${item.stock}`);
+        alert(`Kulang na ang stock para sa ${item.name}! Natitirang stock: ${item.stock}`);
         return;
       }
 
@@ -460,27 +620,13 @@
       renderCart();
     }
 
-    function addManualItemToCart() {
-      const itemId = document.getElementById('manualItemSelect').value;
-      const qtyInput = parseInt(document.getElementById('manualQty').value) || 1;
-      
-      if (!itemId) {
-        alert("Pumili muna ng item mula sa listahan!");
-        return;
-      }
-
-      addItemToCart(itemId, qtyInput);
-      document.getElementById('manualItemSelect').value = '';
-      document.getElementById('manualQty').value = 1;
-    }
-
     function updateCartQty(itemId, newQty) {
       const item = inventory.find(i => i.id === itemId);
       const cartItem = cart.find(c => c.id === itemId);
 
       if (cartItem && item) {
         if (newQty > item.stock) {
-          alert(`Cannot exceed available stock of ${item.stock}`);
+          alert(`Hindi pwedeng lumagpas sa available stock na ${item.stock}`);
           cartItem.qty = item.stock;
         } else if (newQty <= 0) {
           removeFromCart(itemId);
@@ -499,6 +645,7 @@
 
     function clearCart() {
       cart = [];
+      document.getElementById('cashReceivedInput').value = '';
       renderCart();
     }
 
@@ -508,7 +655,7 @@
       let grandTotal = 0;
 
       if (cart.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400 italic">Cart is empty. Select an item above.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400 italic">Walang laman ang cart. I-click ang item sa kaliwa.</td></tr>`;
       } else {
         cart.forEach(c => {
           const subtotal = c.price * c.qty;
@@ -518,29 +665,38 @@
               <td class="p-2 font-bold">${c.name}</td>
               <td class="p-2">₱${c.price.toFixed(2)}</td>
               <td class="p-2 text-center">
-                <input type="number" min="1" value="${c.qty}" onchange="updateCartQty('${c.id}', parseInt(this.value))" class="w-14 border text-center font-bold p-1 rounded">
+                <input type="number" min="1" value="${c.qty}" onchange="updateCartQty('${c.id}', parseInt(this.value))" class="w-12 border text-center font-bold p-1 rounded">
               </td>
               <td class="p-2 text-right font-bold text-blue-600">₱${subtotal.toFixed(2)}</td>
               <td class="p-2 text-center">
-                <button type="button" onclick="removeFromCart('${c.id}')" class="text-red-500 hover:text-red-700 font-bold text-xs">&times; Remove</button>
+                <button type="button" onclick="removeFromCart('${c.id}')" class="text-red-500 hover:text-red-700 font-bold text-xs">&times;</button>
               </td>
             </tr>
           `;
         });
       }
 
+      currentGrandTotal = grandTotal;
       document.getElementById('cartGrandTotal').innerText = `₱${grandTotal.toFixed(2)}`;
+      calculateSukli();
     }
 
-    // PROCESS CHECKOUT
     function processCheckout() {
       if (cart.length === 0) {
-        alert("Cart is empty! Add items before checkout.");
+        alert("Walang laman ang cart! Pumili muna ng item.");
         return;
       }
 
       const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked').value;
+      const cashReceived = parseFloat(document.getElementById('cashReceivedInput').value) || 0;
+
+      if (paymentMethod === 'Cash' && cashReceived < currentGrandTotal) {
+        alert(`Kulang ang bayad ng customer! Total: ₱${currentGrandTotal.toFixed(2)}, Ibinayad: ₱${cashReceived.toFixed(2)}`);
+        return;
+      }
+
       let totalAmount = 0;
+      const boughtItems = [];
 
       cart.forEach(c => {
         const item = inventory.find(i => i.id === c.id);
@@ -548,6 +704,7 @@
           item.stock -= c.qty;
           item.sold = (item.sold || 0) + c.qty;
           totalAmount += item.price * c.qty;
+          boughtItems.push({ id: c.id, name: c.name, price: c.price, qty: c.qty });
         }
       });
 
@@ -560,13 +717,27 @@
       summary.total = (summary.cash || 0) + (summary.gcash || 0);
 
       dailySalesHistory[todayKey] = summary;
+
+      const txnId = 'TXN-' + Date.now().toString().slice(-6);
+      transactionsToday.unshift({
+        id: txnId,
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        items: boughtItems,
+        total: totalAmount,
+        paymentMethod: paymentMethod,
+        cashReceived: cashReceived,
+        change: Math.max(0, cashReceived - totalAmount),
+        cashier: currentUser.username,
+        status: 'COMPLETED'
+      });
+
       syncToCloud();
 
-      showReceipt(cart, totalAmount, paymentMethod);
+      showReceipt(cart, totalAmount, paymentMethod, txnId, cashReceived, Math.max(0, cashReceived - totalAmount));
       clearCart();
     }
 
-    function showReceipt(cartItems, total, paymentMethod) {
+    function showReceipt(cartItems, total, paymentMethod, txnId, cashReceived, change) {
       const receiptTable = document.getElementById('receiptItemsTable');
       receiptTable.innerHTML = '';
       
@@ -581,17 +752,53 @@
         `;
       });
 
+      document.getElementById('receiptTxnId').innerText = `ID: ${txnId}`;
       document.getElementById('receiptDate').innerText = `Date: ${new Date().toLocaleString()}`;
-      document.getElementById('receiptPaymentType').innerText = `Payment via ${paymentMethod}`;
+      document.getElementById('receiptPaymentType').innerText = `Payment via ${paymentMethod} (${currentUser.username})`;
       document.getElementById('receiptTotal').innerText = `₱${total.toFixed(2)}`;
+      document.getElementById('receiptCash').innerText = paymentMethod === 'Cash' ? `₱${cashReceived.toFixed(2)}` : `₱${total.toFixed(2)}`;
+      document.getElementById('receiptChange').innerText = paymentMethod === 'Cash' ? `₱${change.toFixed(2)}` : `₱0.00`;
+      
       document.getElementById('receiptModal').classList.remove('hidden');
     }
 
     function closeReceiptModal() { document.getElementById('receiptModal').classList.add('hidden'); }
 
-    // ADD NEW ITEM FORM
+    function voidTransaction(txnId) {
+      const txn = transactionsToday.find(t => t.id === txnId);
+      if (!txn || txn.status === 'VOIDED') return;
+
+      if (!confirm(`Sigurado ka bang gusto mong i-VOID / REFUND ang transaction ${txnId} na nagkakahalaga ng ₱${txn.total.toFixed(2)}?`)) {
+        return;
+      }
+
+      txn.items.forEach(c => {
+        const item = inventory.find(i => i.id === c.id);
+        if (item) {
+          item.stock += c.qty;
+          item.sold = Math.max(0, (item.sold || 0) - c.qty);
+        }
+      });
+
+      let summary = getTodaySalesSummary();
+      if (txn.paymentMethod === 'GCash') {
+        summary.gcash = Math.max(0, (summary.gcash || 0) - txn.total);
+      } else {
+        summary.cash = Math.max(0, (summary.cash || 0) - txn.total);
+      }
+      summary.total = Math.max(0, (summary.cash || 0) + (summary.gcash || 0));
+      dailySalesHistory[todayKey] = summary;
+
+      txn.status = 'VOIDED';
+
+      syncToCloud();
+      openSalesReportModal();
+      alert(`Transaction ${txnId} successfully VOIDED/REFUNDED!`);
+    }
+
     document.getElementById('addItemForm').addEventListener('submit', (e) => {
       e.preventDefault();
+
       const name = document.getElementById('itemName').value;
       const price = parseFloat(document.getElementById('itemPrice').value);
       const stock = parseInt(document.getElementById('itemStock').value);
@@ -607,11 +814,35 @@
     function openSalesReportModal() {
       const modalTable = document.getElementById('salesReportTable');
       const historyTable = document.getElementById('historyTable');
+      const txnTable = document.getElementById('todayTransactionsTable');
       
       modalTable.innerHTML = '';
       historyTable.innerHTML = '';
-      let hasSales = false;
+      txnTable.innerHTML = '';
 
+      if (transactionsToday.length === 0) {
+        txnTable.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-400 italic">No transactions today.</td></tr>`;
+      } else {
+        transactionsToday.forEach(t => {
+          const isVoided = t.status === 'VOIDED';
+          const itemsSummary = t.items.map(i => `${i.name} (${i.qty})`).join(', ');
+          const actionBtn = isVoided 
+            ? `<span class="text-red-500 font-bold">VOIDED</span>` 
+            : `<button type="button" onclick="voidTransaction('${t.id}')" class="bg-red-600 text-white px-2 py-1 rounded text-xs font-bold hover:bg-red-700 transition">🚫 Void / Refund</button>`;
+
+          txnTable.innerHTML += `
+            <tr class="border-b ${isVoided ? 'bg-red-50 line-through text-gray-400' : 'hover:bg-gray-50'}">
+              <td class="p-2">${t.time}</td>
+              <td class="p-2 font-medium">${itemsSummary}</td>
+              <td class="p-2 text-center font-bold">${t.paymentMethod}</td>
+              <td class="p-2 text-right font-bold">₱${t.total.toFixed(2)}</td>
+              <td class="p-2 text-center">${actionBtn}</td>
+            </tr>
+          `;
+        });
+      }
+
+      let hasSales = false;
       inventory.forEach(item => {
         if ((item.sold || 0) > 0) {
           hasSales = true;
@@ -627,97 +858,120 @@
       });
 
       if (!hasSales) {
-        modalTable.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-400 italic">No sales recorded today.</td></tr>`;
+        modalTable.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-400 italic">No items sold today yet.</td></tr>`;
       }
 
-      const dates = Object.keys(dailySalesHistory).sort().reverse();
-      if (dates.length > 0) {
-        dates.forEach(dateKey => {
-          const isToday = dateKey === todayKey;
-          const rec = dailySalesHistory[dateKey];
-          const cash = typeof rec === 'object' ? (rec.cash || 0) : rec;
-          const gcash = typeof rec === 'object' ? (rec.gcash || 0) : 0;
-          const total = typeof rec === 'object' ? (rec.total || 0) : rec;
+      const todaySummary = getTodaySalesSummary();
+      document.getElementById('modalTotalSales').innerText = `₱${(todaySummary.total || 0).toFixed(2)}`;
+      document.getElementById('modalCashSales').innerText = `₱${(todaySummary.cash || 0).toFixed(2)}`;
+      document.getElementById('modalGcashSales').innerText = `₱${(todaySummary.gcash || 0).toFixed(2)}`;
+
+      const historyKeys = Object.keys(dailySalesHistory).filter(k => k !== todayKey).sort().reverse();
+      if (historyKeys.length === 0) {
+        historyTable.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-400 italic">No past history recorded.</td></tr>`;
+      } else {
+        historyKeys.forEach(k => {
+          const rec = dailySalesHistory[k];
+          const cashVal = typeof rec === 'number' ? rec : (rec.cash || 0);
+          const gcashVal = typeof rec === 'number' ? 0 : (rec.gcash || 0);
+          const totalVal = typeof rec === 'number' ? rec : (rec.total || 0);
 
           historyTable.innerHTML += `
-            <tr class="border-b ${isToday ? 'bg-blue-50 font-bold' : 'hover:bg-gray-50'}">
-              <td class="p-2">${getReadableDate(dateKey)} ${isToday ? '<span class="text-xs bg-blue-600 text-white px-2 py-0.5 rounded-full ml-2">Today</span>' : ''}</td>
-              <td class="p-2 text-right">₱${cash.toFixed(2)}</td>
-              <td class="p-2 text-right">₱${gcash.toFixed(2)}</td>
-              <td class="p-2 text-right font-bold text-green-700">₱${total.toFixed(2)}</td>
+            <tr class="border-b hover:bg-gray-50">
+              <td class="p-2 font-bold">${getReadableDate(k)}</td>
+              <td class="p-2 text-right">₱${cashVal.toFixed(2)}</td>
+              <td class="p-2 text-right">₱${gcashVal.toFixed(2)}</td>
+              <td class="p-2 text-right font-bold text-blue-600">₱${totalVal.toFixed(2)}</td>
             </tr>
           `;
         });
-      } else {
-        historyTable.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-gray-400 italic">No sales history available.</td></tr>`;
       }
 
-      const summary = getTodaySalesSummary();
-      document.getElementById('modalTotalSales').innerText = `₱${(summary.total || 0).toFixed(2)}`;
-      document.getElementById('modalCashSales').innerText = `₱${(summary.cash || 0).toFixed(2)}`;
-      document.getElementById('modalGcashSales').innerText = `₱${(summary.gcash || 0).toFixed(2)}`;
       document.getElementById('salesReportModal').classList.remove('hidden');
     }
 
-    function closeSalesReportModal() { document.getElementById('salesReportModal').classList.add('hidden'); }
-    
-    // GCASH MODAL TOGGLE
-    function openGcashModal() {
-      const modal = document.getElementById('gcashModal');
-      if (modal) modal.classList.remove('hidden');
+    function closeSalesReportModal() {
+      document.getElementById('salesReportModal').classList.add('hidden');
     }
 
-    function closeGcashModal() {
-      const modal = document.getElementById('gcashModal');
-      if (modal) modal.classList.add('hidden');
+    function openUpdateModal(itemId) {
+      const item = inventory.find(i => i.id === itemId);
+      if (!item) return;
+
+      document.getElementById('editItemId').value = item.id;
+      document.getElementById('editItemName').value = item.name;
+      document.getElementById('editItemPrice').value = item.price;
+      document.getElementById('editAddStock').value = '';
+      document.getElementById('updateModal').classList.remove('hidden');
     }
 
-    function resetDailySalesData() {
-      if (confirm("Reset today's sales data? (Past daily history will be preserved)")) {
-        inventory.forEach(item => { item.sold = 0; });
-        dailySalesHistory[todayKey] = { cash: 0, gcash: 0, total: 0 };
-        syncToCloud();
-        openSalesReportModal();
-      }
+    function closeModal() {
+      document.getElementById('updateModal').classList.add('hidden');
     }
-
-    function openUpdateModal(id) {
-      const item = inventory.find(i => i.id === id);
-      if (item) {
-        document.getElementById('editItemId').value = item.id;
-        document.getElementById('editItemName').value = item.name;
-        document.getElementById('editItemPrice').value = item.price;
-        document.getElementById('editAddStock').value = '';
-        document.getElementById('modalTitle').innerText = `Update ${item.name}`;
-        document.getElementById('updateModal').classList.remove('hidden');
-      }
-    }
-
-    function closeModal() { document.getElementById('updateModal').classList.add('hidden'); }
 
     function saveItemUpdate() {
       const id = document.getElementById('editItemId').value;
       const item = inventory.find(i => i.id === id);
-      if (item) {
-        item.name = document.getElementById('editItemName').value;
-        item.price = parseFloat(document.getElementById('editItemPrice').value);
-        item.stock += parseInt(document.getElementById('editAddStock').value) || 0;
-        syncToCloud();
-        closeModal();
+      if (!item) return;
+
+      const newName = document.getElementById('editItemName').value.trim();
+      const newPrice = parseFloat(document.getElementById('editItemPrice').value);
+      const addStock = parseInt(document.getElementById('editAddStock').value) || 0;
+
+      if (!newName || isNaN(newPrice) || newPrice < 0) {
+        alert("Paki-check ang input values!");
+        return;
       }
+
+      item.name = newName;
+      item.price = newPrice;
+      item.stock += addStock;
+
+      syncToCloud();
+      closeModal();
     }
 
-    document.getElementById('currentDateDisplay').innerText = `Date: ${getReadableDate(todayKey)}`;
-  </script>
+    function exportSalesReportToCSV() {
+      let csvContent = "data:text/csv;charset=utf-8,";
+      csvContent += "CANTEEN POS REPORT\n\n";
 
-  <!-- PWA SERVICE WORKER REGISTER -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('sw.js')
-          .then(reg => console.log('PWA Service Worker Registered:', reg.scope))
-          .catch(err => console.log('SW Registration Failed:', err));
+      csvContent += "TODAY'S SUMMARY\n";
+      const todaySum = getTodaySalesSummary();
+      csvContent += `Total Sales Today,P${(todaySum.total || 0).toFixed(2)}\n`;
+      csvContent += `Cash Sales Today,P${(todaySum.cash || 0).toFixed(2)}\n`;
+      csvContent += `GCash Sales Today,P${(todaySum.gcash || 0).toFixed(2)}\n\n`;
+
+      csvContent += "ITEM SALES BREAKDOWN (TODAY)\n";
+      csvContent += "Item Name,Qty Sold,Unit Price,Subtotal\n";
+      inventory.forEach(i => {
+        if ((i.sold || 0) > 0) {
+          csvContent += `"${i.name}",${i.sold},P${i.price.toFixed(2)},P${(i.sold * i.price).toFixed(2)}\n`;
+        }
       });
+
+      csvContent += "\nTRANSACTIONS TODAY\n";
+      csvContent += "Time,Payment Method,Cashier,Total Amount,Status\n";
+      transactionsToday.forEach(t => {
+        csvContent += `"${t.time}","${t.paymentMethod}","${t.cashier}",P${t.total.toFixed(2)},"${t.status}"\n`;
+      });
+
+      csvContent += "\nPAST SALES HISTORY\n";
+      csvContent += "Date,Cash,GCash,Total\n";
+      Object.keys(dailySalesHistory).filter(k => k !== todayKey).sort().reverse().forEach(k => {
+        const rec = dailySalesHistory[k];
+        const cashVal = typeof rec === 'number' ? rec : (rec.cash || 0);
+        const gcashVal = typeof rec === 'number' ? 0 : (rec.gcash || 0);
+        const totalVal = typeof rec === 'number' ? rec : (rec.total || 0);
+        csvContent += `"${getReadableDate(k)}",P${cashVal.toFixed(2)},P${gcashVal.toFixed(2)},P${totalVal.toFixed(2)}\n`;
+      });
+
+      const encodedUri = encodeURI(csvContent);
+      const link = document.createElement("a");
+      link.setAttribute("href", encodedUri);
+      link.setAttribute("download", `Canteen_POS_Report_${todayKey}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
     }
   </script>
 </body>
